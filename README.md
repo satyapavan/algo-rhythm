@@ -4,7 +4,7 @@ Wooo Hooooo!!
 
 **TODO**
 - Move the code to partitions like algo, ds, euler, goodq (good questions), and try to create a utility class and a stress test class
-- learn rules of big-O notation, espically the fact that n^a < b^n kind of details
+- learn rules of big-O notation, espically the fact that n^a < b^n kind of details (https://www.khanacademy.org/computing/computer-science/algorithms/asymptotic-notation/a/asymptotic-notation)
 
 **Important links**
 - https://algs4.cs.princeton.edu/code/
