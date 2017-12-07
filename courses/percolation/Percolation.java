@@ -73,7 +73,8 @@ public class Percolation {
 		{
 			objUF.union(convert2Dto1D(row, col), TOP_VIRTUAL_CELL);
 		}
-		else if( row == (grid_size -1) ) 
+		// writing else if here broke the corner case of n=1
+	    if( row == (grid_size -1) ) 
 		{
 			objUF.union(convert2Dto1D(row, col), BOTTOM_VIRTUAL_CELL);
 		}
@@ -108,7 +109,7 @@ public class Percolation {
 		col = validateAndCorrectInput(col);
 		
 		if(ENABLE_LOGS) System.out.println("Row=" + row + " Col=" + col);
-		if(ENABLE_LOGS) System.out.println(grid.length);
+		if(ENABLE_LOGS) System.out.println("grid.length = " + grid.length);
 
 		
 		return grid[row][col] == CELL_OPEN;
