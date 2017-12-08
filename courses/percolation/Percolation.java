@@ -2,24 +2,32 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
 
-	private int CELL_OPEN = 1;
-	private int CELL_BLOCK = 0;
-	
-	private boolean ENABLE_LOGS = false;
-	
-	private int TOP_VIRTUAL_CELL = 0;
-	private int BOTTOM_VIRTUAL_CELL = 0;
+	final private int CELL_OPEN = 1;
+	final private int CELL_BLOCK = 0;
+
+	final private boolean ENABLE_LOGS = false;
+
+	final private int TOP_VIRTUAL_CELL ;
+	final private int BOTTOM_VIRTUAL_CELL ;
 	private int openSitesCount = 0;
-	private int grid_size = 0;
+	final private int grid_size ;
+
 	private WeightedQuickUnionUF objUF;
+	private WeightedQuickUnionUF objBackWash;
+
+	private boolean tempResult;
 
 	private int[][] grid;
 
 	public Percolation(int number_of_elements)                // create n-by-n grid, with all sites blocked
 	{
+		if(ENABLE_LOGS) {
+			System.out.println("Started Percolation with [" + number_of_elements + "] grid");
+		}
+
 		if(number_of_elements <= 0) 
 			throw new IllegalArgumentException ("Negative grid size");
-		
+
 		grid = new int[number_of_elements][number_of_elements];
 		openSitesCount = 0;
 		grid_size = number_of_elements;
@@ -31,10 +39,13 @@ public class Percolation {
 				grid[itrRow][itrCol] = CELL_BLOCK;
 			}
 		}
-		
+
 		// This +2 here is for the virtual sites on top of top row and last row
 		objUF = new WeightedQuickUnionUF((number_of_elements * number_of_elements) + 2);
 		
+		// + 1 as there is no VIRTUAL_BOTTOM_CELL here, so 1 less
+		objBackWash = new WeightedQuickUnionUF((number_of_elements * number_of_elements) + 1);
+
 		// this -1 here is for the array conventions
 		TOP_VIRTUAL_CELL = (number_of_elements * number_of_elements) + 1 - 1;
 		BOTTOM_VIRTUAL_CELL = (number_of_elements * number_of_elements) + 2 - 1;
@@ -45,9 +56,9 @@ public class Percolation {
 	{		
 		if (x <= 0 || x > grid_size) 
 			throw new IllegalArgumentException ("index i out of bounds");
-		
+
 		// This is because we are going to get the inputs not in array formats (i.e they will be from 1..n rather than 0..(n-1)
-		
+
 		return --x;
 	}
 
@@ -56,95 +67,147 @@ public class Percolation {
 		// This turned out particularly simple or i did turn out smarter
 		return (grid_size * row) + col ;
 	}
-	
+
 	private boolean isValidGrid(int row, int col)
 	{
 		// TODO - i really wanted to call isOpen here but that would mess up with my row,col values again :-(
 		if (row >= 0 && row <= grid_size-1 && col >= 0 && col <= grid_size-1 ) 
-			return grid[row][col] == CELL_OPEN;
-		
-		return false;
+			tempResult = grid[row][col] == CELL_OPEN;
+		else
+			tempResult = false;
+
+		if(ENABLE_LOGS) {
+			System.out.println("[row, col] = [" + row + ", " + col + "] -> isValidGrid = " + tempResult);
+		}
+
+		return tempResult;
 	}
-	
+
 	private void mapNeighbours(int row, int col)
 	{
+		if(ENABLE_LOGS) {
+			System.out.println("mapNeighbours -> [row, col] = [" + row + ", " + col + "]");
+		}
+
+		if(isValidGrid(row+1, col)) {
+			objUF.union(convert2Dto1D(row+1, col), convert2Dto1D(row, col));
+			objBackWash.union(convert2Dto1D(row+1, col), convert2Dto1D(row, col));
+
+			if(ENABLE_LOGS) System.out.println("	union with row+1, col");
+		}
+		if(isValidGrid(row, col+1)) {
+			objUF.union(convert2Dto1D(row, col+1), convert2Dto1D(row, col));
+			objBackWash.union(convert2Dto1D(row, col+1), convert2Dto1D(row, col));
+
+			if(ENABLE_LOGS) System.out.println("	union with row, col+1");
+		}
+		if(isValidGrid(row-1, col)) {
+			objUF.union(convert2Dto1D(row-1, col), convert2Dto1D(row, col));
+			objBackWash.union(convert2Dto1D(row-1, col), convert2Dto1D(row, col));
+
+			if(ENABLE_LOGS) System.out.println("	union with row-1, col");
+		}
+		if(isValidGrid(row, col-1)) {
+			objUF.union(convert2Dto1D(row, col-1), convert2Dto1D(row, col));
+			objBackWash.union(convert2Dto1D(row, col-1), convert2Dto1D(row, col));
+
+			if(ENABLE_LOGS) System.out.println("	union with row, col-1");
+		}
+
 		// Make the connections with virtual nodes
 		if( row == 0) 
 		{
 			objUF.union(convert2Dto1D(row, col), TOP_VIRTUAL_CELL);
+			objBackWash.union(convert2Dto1D(row, col), TOP_VIRTUAL_CELL);
+
+			if(ENABLE_LOGS) {
+				System.out.println("	union with TOP_VIRTUAL_CELL");
+			}
 		}
 		// writing else if here broke the corner case of n=1
-	    if( row == (grid_size -1) ) 
+		if( row == (grid_size -1) ) 
 		{
 			objUF.union(convert2Dto1D(row, col), BOTTOM_VIRTUAL_CELL);
+			
+			if(ENABLE_LOGS) {
+				System.out.println("	union with BOTTOM_VIRTUAL_CELL");
+			}
 		}
-		
-		if(isValidGrid(row+1, col)) 
-			objUF.union(convert2Dto1D(row+1, col), convert2Dto1D(row, col));
-		if(isValidGrid(row, col+1)) 
-			objUF.union(convert2Dto1D(row, col+1), convert2Dto1D(row, col));
-		if(isValidGrid(row-1, col)) 
-			objUF.union(convert2Dto1D(row-1, col), convert2Dto1D(row, col));
-		if(isValidGrid(row, col-1)) 
-			objUF.union(convert2Dto1D(row, col-1), convert2Dto1D(row, col));	
-	}
-	
-	public void open(int row, int col)    // open site (row, col) if it is not open already
-	{
-		row = validateAndCorrectInput(row); 
-		col = validateAndCorrectInput(col);
-
-		if (grid[row][col] == CELL_OPEN )
-			return;
-
-		grid[row][col] = CELL_OPEN;
-		openSitesCount++;
-		
-		mapNeighbours(row, col);
 	}
 
-	public boolean isOpen(int row, int col)  // is site (row, col) open?
-	{
-		row = validateAndCorrectInput(row); 
-		col = validateAndCorrectInput(col);
-		
-		if(ENABLE_LOGS) System.out.println("Row=" + row + " Col=" + col);
-		if(ENABLE_LOGS) System.out.println("grid.length = " + grid.length);
+public void open(int row, int col)    // open site (row, col) if it is not open already
+{
+	row = validateAndCorrectInput(row); 
+	col = validateAndCorrectInput(col);
 
-		
-		return grid[row][col] == CELL_OPEN;
+	if(ENABLE_LOGS) {
+		System.out.println("open -> [row, col] = [" + row + ", " + col + "]");
 	}
 
-	public boolean isFull(int row, int col)  // is site (row, col) full?
-	{
-		if(ENABLE_LOGS) 
-			System.out.println("isFull Row=" + row + " Col=" + col);
-		
-		row = validateAndCorrectInput(row); 
-		col = validateAndCorrectInput(col);
-		
-		return objUF.connected(convert2Dto1D(row, col), TOP_VIRTUAL_CELL);
+	if (grid[row][col] == CELL_OPEN )
+		return;
+
+	grid[row][col] = CELL_OPEN;
+	openSitesCount++;
+
+	mapNeighbours(row, col);
+}
+
+public boolean isOpen(int row, int col)  // is site (row, col) open?
+{
+	row = validateAndCorrectInput(row); 
+	col = validateAndCorrectInput(col);
+
+	tempResult = ( grid[row][col] == CELL_OPEN );
+
+	if(ENABLE_LOGS) {
+		System.out.println("[row, col] = [" + row + ", " + col + "] -> isOpen = " + tempResult);
 	}
 
-	public int numberOfOpenSites()       // number of open sites
-	{
-		if(ENABLE_LOGS)
-			System.out.println("Open Sites Count : " + openSitesCount );
-		
-		return openSitesCount;
+	return tempResult;
+}
+
+public boolean isFull(int row, int col)  // is site (row, col) full?
+{
+	row = validateAndCorrectInput(row); 
+	col = validateAndCorrectInput(col);
+
+	// VERY IMPORTANT!! This is to make sure there is no backwash
+	// I am not happy with the solution, but couldn't think of any
+	tempResult = objBackWash.connected(convert2Dto1D(row, col), TOP_VIRTUAL_CELL);
+
+	if(ENABLE_LOGS) {
+		System.out.println("[row, col] = [" + row + ", " + col + "] -> isFull = " + tempResult);
 	}
 
-	public boolean percolates()              // does the system percolate?
+	return tempResult;
+}
+
+public int numberOfOpenSites()       // number of open sites
+{
+	if(ENABLE_LOGS)
+		System.out.println("Open Sites Count : " + openSitesCount );
+
+	return openSitesCount;
+}
+
+public boolean percolates()              // does the system percolate?
+{
+	tempResult = objUF.connected(TOP_VIRTUAL_CELL, BOTTOM_VIRTUAL_CELL);
+
+	if(ENABLE_LOGS)
 	{
-		if(ENABLE_LOGS) 
+		if(tempResult)
 			System.out.println("Threshold : " + (double) openSitesCount/(grid_size * grid_size));
-		
-		return objUF.connected(TOP_VIRTUAL_CELL, BOTTOM_VIRTUAL_CELL);
+		System.out.println("Percolate : " + tempResult );
 	}
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+	return tempResult;
+}
 
-	}
+public static void main(String[] args) {
+	// TODO Auto-generated method stub
+
+}
 
 }
