@@ -50,6 +50,8 @@ public class Deque<Item> implements Iterable<Item> {
 		head.item = item;
 		head.next = oldHead;
 		head.prev = null;
+		
+		qSize++;
 	}
 
 	public void addLast(Item item)           // add the item to the end
@@ -64,6 +66,8 @@ public class Deque<Item> implements Iterable<Item> {
 		tail.item = item;
 		tail.next = null;
 		oldTail.next = tail;
+		
+		qSize++;
 	}
 
 	public Item removeFirst()                // remove and return the item from the front
@@ -72,7 +76,11 @@ public class Deque<Item> implements Iterable<Item> {
 
 		head = head.next;
 
+		head.prev = null;
+		
 		return obj;
+		
+		qSize--;
 	}
 
 	public Item removeLast()                 // remove and return the item from the end
@@ -80,6 +88,8 @@ public class Deque<Item> implements Iterable<Item> {
 		Item obj = tail.item;
 		return obj;
 		//	last = ding dong, how how how without previous? Lets work on this tomorrow.
+		
+		qSize--;
 	}
 
 	/*
