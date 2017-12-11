@@ -75,21 +75,23 @@ public class Deque<Item> implements Iterable<Item> {
 		Item obj = head.item;
 
 		head = head.next;
-
 		head.prev = null;
 		
-		return obj;
-		
 		qSize--;
+		
+		return obj;
 	}
 
 	public Item removeLast()                 // remove and return the item from the end
 	{
 		Item obj = tail.item;
-		return obj;
-		//	last = ding dong, how how how without previous? Lets work on this tomorrow.
 		
+		tail = tail.prev;
+		tail.next = null;
+				
 		qSize--;
+		
+		return obj;
 	}
 
 	/*
